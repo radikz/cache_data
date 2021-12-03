@@ -8,6 +8,7 @@ This library depend on [hive](https://pub.dev/packages/hive) for the database an
 Add the dependency to `pubspec.yaml`:
 ```yaml
 dependencies:
+  cache_data:
   dart_json_mapper:
   dart_json_mapper_flutter:
 dev_dependencies:
