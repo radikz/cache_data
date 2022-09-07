@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'main.mapper.g.dart' show initializeJsonMapper;
 
-import 'package:dart_json_mapper_flutter/dart_json_mapper_flutter.dart' show flutterAdapter;
-
+import 'package:dart_json_mapper_flutter/dart_json_mapper_flutter.dart'
+    show flutterAdapter;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

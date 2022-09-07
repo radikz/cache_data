@@ -14,10 +14,11 @@ class DbRepository {
   Box<Cache>? _box;
 
   /// Opens a box.
-  Future<Box<Cache>?> hiveOpenBox(String name) async {
+  Future<void> hiveOpenBox(String name) async {
     _box ??= await Hive.openBox<Cache>(name);
-    return _box;
   }
+
+  bool isBoxOpen(String name) => Hive.isBoxOpen(name);
 
   /// Saves the key - value pair.
   void put(String key, Cache value) {
@@ -33,17 +34,25 @@ class DbRepository {
     return item;
   }
 
+  bool isItemAvailable(String key) {
+    return _box!.containsKey(key);
+  }
+
   Iterable<Cache>? getAllItem() {
     final item = _box?.values;
     return item;
   }
 
-  void deleteItem(String key) async {
+  Future<void> deleteItem(String key) async {
     try {
-      _box!.delete(key);
+      await _box!.delete(key);
       getAllItem();
     } on Exception {
       throw ErrorDeleteItem();
     }
+  }
+
+  Future<void> deleteAllItem() async {
+    await _box!.deleteFromDisk();
   }
 }

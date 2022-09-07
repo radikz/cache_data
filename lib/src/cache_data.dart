@@ -1,57 +1,46 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:dart_json_mapper/dart_json_mapper.dart' show JsonMapper;
 
-import 'db_repository.dart';
+import 'cache_repository.dart';
 import 'models/cache.dart';
 
-class ErrorFetch implements Exception {}
-
+/// Instance of cache data.
+/// Flutter library to load and cache from API.
 class CacheData<T> {
-  CacheData({http.Client? client}) : _client = client ?? http.Client();
+  CacheData([http.Client? client])
+      : _cacheRepository = CacheRepository<T>(client: client);
 
-  final http.Client _client;
-  final DbRepository _dbRepository = DbRepository();
-
-  /// Fetch data from the internet by sending HTTP GET request
-  Future<T?> _fetchNewData(String url, Duration duration) async {
-    final uri = Uri.parse(url);
-
-    final response = await _client.get(uri);
-    final json = response.body;
-
-    try {
-      final data = JsonMapper.deserialize<T>(json);
-      Cache cache =
-          Cache(data: json, url: url, time: DateTime.now(), duration: duration);
-      _dbRepository.put(url, cache);
-      return data;
-    } on Exception {
-      throw ErrorFetch();
-    }
+  /// Initialize Hive DB with the path from [getApplicationDocumentsDirectory]
+  static Future<void> init([String? subDir]) async {
+    await Hive.initFlutter(subDir);
+    Hive.registerAdapter(CacheAdapter());
   }
 
-  Future<Box<Cache>?> _checkDbOpen() async {
-    final box = await _dbRepository.hiveOpenBox('cache');
-    return box;
+  final CacheRepository<T> _cacheRepository;
+
+  /// Fetch data from [HiveDB] with url as a key. If the database is empty,
+  /// Sends an [HTTP] [GET] request to the given url then store the data in the
+  /// [HiveDB] with [duration] as the age of the data.
+  ///
+  /// Return Dart object.
+  Future<T?> fetchData(
+  String url, {required Duration duration}) {
+    return _cacheRepository.checkDb(url, duration);
   }
 
-  /// check data in the DB
-  Future<T?> checkDb(String url, Duration duration) async {
-    await _checkDbOpen();
-    final cache = _dbRepository.getItem(url);
-    if (cache == null) {
-      return await _fetchNewData(url, duration);
-    }
-    final expiryDate = cache.time.add(cache.duration);
+  /// Check whether the cache is expired or not
+  bool isExpired(String url) {
+    return _cacheRepository.isExpired(url);
+  }
 
-    /// Data already expired
-    if (expiryDate.isBefore(DateTime.now())) {
-      return await _fetchNewData(url, duration);
-    }
+  /// Deletes the given url from the cache.
+  /// If it does not exist, nothing happens.
+  Future<bool> deleteItem(String url) async {
+    return _cacheRepository.deleteItem(url);
+  }
 
-    /// Data haven't expired
-    final result = JsonMapper.deserialize<T>(cache.data);
-    return result;
+  /// Delete all caches
+  Future<void> deleteAllItem() async {
+    return _cacheRepository.deleteAllItem();
   }
 }

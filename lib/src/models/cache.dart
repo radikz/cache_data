@@ -22,4 +22,9 @@ class Cache {
     required this.time,
     required this.duration,
   });
+
+  @override
+  String toString() {
+    return 'Cache{url: $url, data: $data, time: $time, duration: $duration}';
+  }
 }
