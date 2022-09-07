@@ -79,10 +79,12 @@ if you want to generate files everytime you make changes in the code.
 
 ## Usage
 ```dart
+final cache = CacheData<List<Data>>();
+
 FutureBuilder<List<Data>?>(
-  future: CacheData<List<Data>>().fetchData(
-      url: 'https://jsonplaceholder.typicode.com/albums',
-      duration: const Duration(seconds: 120)),
+  future: cache.fetchData(
+            'https://jsonplaceholder.typicode.com/albums',
+            duration: duration),
   builder: (context, snapshot) {
     ...
   },
